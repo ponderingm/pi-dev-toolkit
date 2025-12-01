@@ -6,15 +6,15 @@ echo "Raspberry Pi Dev Environment Setup"
 echo "=========================================="
 
 # Update system packages
-echo "[1/7] Updating system packages..."
+echo "[1/8] Updating system packages..."
 sudo apt update && sudo apt upgrade -y
 
 # Install essential tools
-echo "[2/7] Installing essential tools..."
+echo "[2/8] Installing essential tools..."
 sudo apt install -y curl git htop vim
 
 # Configure Vim
-echo "[3/7] Configuring Vim..."
+echo "[3/8] Configuring Vim..."
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SETUP_DIR="$(dirname "$SCRIPT_DIR")"
 if [ -f "$SETUP_DIR/.vimrc" ]; then
@@ -25,7 +25,7 @@ else
 fi
 
 # Install GitHub CLI
-echo "[4/7] Installing GitHub CLI..."
+echo "[4/8] Installing GitHub CLI..."
 if ! command -v gh &> /dev/null; then
   # Add GitHub CLI official repository
   # Install wget if missing
@@ -60,7 +60,7 @@ else
 fi
 
 # Configure Git using GitHub CLI
-echo "[5/7] Configuring Git..."
+echo "[5/8] Configuring Git..."
 
 # Check GitHub auth status
 if gh auth status &>/dev/null; then
@@ -149,12 +149,69 @@ else
 fi
 
 # Install Tailscale
-echo "[6/7] Installing Tailscale..."
+echo "[6/8] Installing Tailscale..."
 curl -fsSL https://tailscale.com/install.sh | sh
 
 # Install Coolify
-echo "[7/7] Installing Coolify..."
+echo "[7/8] Installing Coolify..."
 curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
+
+# Install smee.io client
+echo "[8/8] Setting up smee.io webhook proxy..."
+
+# Check if Node.js/npm is available
+if ! command -v npm &> /dev/null; then
+  echo "  Installing Node.js..."
+  curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+  sudo apt install -y nodejs
+fi
+
+# Install smee-client
+echo "  Installing smee-client..."
+sudo npm install --global smee-client
+
+# Get the actual path to the smee binary
+SMEE_BIN=$(which smee 2>/dev/null || echo "/usr/local/bin/smee")
+if [ ! -x "$SMEE_BIN" ]; then
+  NPM_PREFIX=$(npm prefix -g 2>/dev/null || echo "/usr/local")
+  SMEE_BIN="$NPM_PREFIX/bin/smee"
+fi
+echo "  Smee binary: $SMEE_BIN"
+
+# Generate new smee.io channel URL
+echo "  Generating smee.io channel URL..."
+SMEE_URL=$(curl -w "%{redirect_url}" -s -o /dev/null https://smee.io/new 2>/dev/null || echo "")
+# Validate the URL format
+if [ -z "$SMEE_URL" ] || ! echo "$SMEE_URL" | grep -qE '^https://smee\.io/[A-Za-z0-9]+$'; then
+  echo "  Warning: Failed to generate smee.io URL"
+  echo "  Please manually generate a URL at https://smee.io/new"
+  SMEE_URL="https://smee.io/YOUR_CHANNEL_URL"
+fi
+echo "  Smee URL: $SMEE_URL"
+
+# Create systemd service file
+# Note: Port 8000 is where Coolify runs - smee forwards webhooks there
+# Note: Running as root per original specification; consider using a less privileged user
+echo "  Creating systemd service..."
+sudo tee /etc/systemd/system/smee.service > /dev/null << EOF
+[Unit]
+Description=Smee Client
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Restart=always
+ExecStart=$SMEE_BIN --url $SMEE_URL --path /webhooks/source/github/events --port 8000
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable and start the service
+sudo systemctl daemon-reload
+sudo systemctl enable smee
+echo "  Smee service enabled (not started - update URL first if placeholder)"
 
 echo ""
 echo "=========================================="
@@ -164,4 +221,7 @@ echo ""
 echo "Next steps:"
 echo "  1. Run 'sudo tailscale up' to join the Tailscale network"
 echo "  2. Access Coolify at http://localhost:8000"
+echo "  3. If smee.io URL is a placeholder, update /etc/systemd/system/smee.service"
+echo "     with a valid URL from https://smee.io/new, then run:"
+echo "       sudo systemctl daemon-reload && sudo systemctl restart smee"
 echo ""
