@@ -72,14 +72,32 @@ fi
 echo "[5/7] Installing GitHub CLI..."
 if ! command -v gh &> /dev/null; then
   # GitHub CLI 公式リポジトリの追加
-  (type -p wget >/dev/null || (sudo apt update && sudo apt install wget -y)) \
-    && sudo mkdir -p -m 755 /etc/apt/keyrings \
-    && out=$(mktemp) && wget -nv -O "$out" https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-    && sudo cp "$out" /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-    && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-    && sudo apt update \
-    && sudo apt install gh -y
+  # wget がインストールされていない場合はインストール
+  if ! type -p wget >/dev/null; then
+    sudo apt update && sudo apt install wget -y
+  fi
+  
+  # キーリングディレクトリの作成
+  sudo mkdir -p -m 755 /etc/apt/keyrings
+  
+  # GPG キーのダウンロードとインストール
+  out=$(mktemp)
+  if wget -nv -O "$out" https://cli.github.com/packages/githubcli-archive-keyring.gpg; then
+    sudo cp "$out" /etc/apt/keyrings/githubcli-archive-keyring.gpg
+    rm -f "$out"
+    sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+  else
+    rm -f "$out"
+    echo "  Error: GitHub CLI のキーリングのダウンロードに失敗しました"
+    exit 1
+  fi
+  
+  # APT リポジトリの追加
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+  
+  # GitHub CLI のインストール
+  sudo apt update
+  sudo apt install gh -y
   echo "  GitHub CLI をインストールしました"
 else
   echo "  GitHub CLI は既にインストールされています"
