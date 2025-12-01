@@ -170,10 +170,18 @@ fi
 echo "  Installing smee-client..."
 sudo npm install --global smee-client
 
+# Get the actual path to the smee binary
+SMEE_BIN=$(which smee 2>/dev/null || echo "/usr/local/bin/smee")
+if [ ! -x "$SMEE_BIN" ]; then
+  SMEE_BIN=$(npm bin -g 2>/dev/null)/smee
+fi
+echo "  Smee binary: $SMEE_BIN"
+
 # Generate new smee.io channel URL
 echo "  Generating smee.io channel URL..."
-SMEE_URL=$(curl -w "%{redirect_url}" -s -o /dev/null https://smee.io/new)
-if [ -z "$SMEE_URL" ]; then
+SMEE_URL=$(curl -w "%{redirect_url}" -s -o /dev/null https://smee.io/new 2>/dev/null || echo "")
+# Validate the URL format
+if [ -z "$SMEE_URL" ] || ! echo "$SMEE_URL" | grep -qE '^https://smee\.io/[A-Za-z0-9]+$'; then
   echo "  Warning: Failed to generate smee.io URL"
   echo "  Please manually generate a URL at https://smee.io/new"
   SMEE_URL="https://smee.io/YOUR_CHANNEL_URL"
@@ -181,6 +189,7 @@ fi
 echo "  Smee URL: $SMEE_URL"
 
 # Create systemd service file
+# Note: Port 8000 is where Coolify runs - smee forwards webhooks there
 echo "  Creating systemd service..."
 sudo tee /etc/systemd/system/smee.service > /dev/null << EOF
 [Unit]
@@ -191,7 +200,7 @@ After=network.target
 Type=simple
 User=root
 Restart=always
-ExecStart=/usr/bin/smee --url $SMEE_URL --path /webhooks/source/github/events --port 8000
+ExecStart=$SMEE_BIN --url $SMEE_URL --path /webhooks/source/github/events --port 8000
 
 [Install]
 WantedBy=multi-user.target
