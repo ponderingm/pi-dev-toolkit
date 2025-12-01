@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/ponderingm/pi-dev-toolkit/compare/v1.0.0...v1.1.0) (2025-12-01)
+
+
+### Features
+
+* setup.shにGit設定とGitHub CLIを追加 ([#11](https://github.com/ponderingm/pi-dev-toolkit/issues/11)) ([8936dcf](https://github.com/ponderingm/pi-dev-toolkit/commit/8936dcfc4fd072fe3eb2240da719bec3edd27ddc))
+
 ## 1.0.0 (2025-12-01)
 
 
