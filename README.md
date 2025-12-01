@@ -27,7 +27,7 @@ Raspberry Pi 4 上の Coolify を使用した、シンプルで保守可能な�
 ```bash
 git clone https://github.com/ponderingm/pi-dev-toolkit.git
 cd pi-dev-toolkit
-./setup/scripts/setup.sh
+bash setup/scripts/setup.sh
 ```
 
 セットアップスクリプトは以下を実行します：
