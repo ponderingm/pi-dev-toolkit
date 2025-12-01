@@ -1,0 +1,13 @@
+# Basic configuration for Nixpacks
+# Coolify uses Nixpacks for automatic build detection
+# https://nixpacks.com/docs/configuration/file
+
+# Uncomment and customize as needed:
+# [phases.setup]
+# nixPkgs = ["...", "..."]
+
+# [phases.build]
+# cmds = ["..."]
+
+# [start]
+# cmd = "..."
