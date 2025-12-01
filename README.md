@@ -56,6 +56,7 @@ pi-dev-toolkit/
 ├── .vscode/             # VS Code 設定
 │   ├── extensions.json  # 推奨拡張機能
 │   └── settings.json    # エディタ設定
+├── .vimrc               # Vim configuration
 ├── compose.yaml         # ローカル開発用 Docker Compose
 ├── docs/
 │   └── ai_instruction.md # AI アシスタント向け指示

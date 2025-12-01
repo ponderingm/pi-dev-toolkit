@@ -5,20 +5,31 @@ echo "=========================================="
 echo "Raspberry Pi 開発環境セットアップ"
 echo "=========================================="
 
-# システムパッケージの更新
-echo "[1/4] システムパッケージを更新中..."
+# Update system packages
+echo "[1/5] Updating system packages..."
 sudo apt update && sudo apt upgrade -y
 
-# 必須ツールのインストール
-echo "[2/4] 必須ツールをインストール中..."
-sudo apt install -y curl git htop
+# Install essential tools
+echo "[2/5] Installing essential tools..."
+sudo apt install -y curl git htop vim
 
-# Tailscale のインストール
-echo "[3/4] Tailscale をインストール中..."
+# Configure Vim
+echo "[3/5] Configuring Vim..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+if [ -f "$REPO_ROOT/.vimrc" ]; then
+  cp "$REPO_ROOT/.vimrc" "$HOME/.vimrc"
+  echo "  .vimrc copied to $HOME/.vimrc"
+else
+  echo "  Warning: .vimrc not found in repository"
+fi
+
+# Install Tailscale
+echo "[4/5] Installing Tailscale..."
 curl -fsSL https://tailscale.com/install.sh | sh
 
-# Coolify のインストール
-echo "[4/4] Coolify をインストール中..."
+# Install Coolify
+echo "[5/5] Installing Coolify..."
 curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
 
 echo ""
