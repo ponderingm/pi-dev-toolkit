@@ -173,7 +173,8 @@ sudo npm install --global smee-client
 # Get the actual path to the smee binary
 SMEE_BIN=$(which smee 2>/dev/null || echo "/usr/local/bin/smee")
 if [ ! -x "$SMEE_BIN" ]; then
-  SMEE_BIN=$(npm bin -g 2>/dev/null)/smee
+  NPM_PREFIX=$(npm prefix -g 2>/dev/null || echo "/usr/local")
+  SMEE_BIN="$NPM_PREFIX/bin/smee"
 fi
 echo "  Smee binary: $SMEE_BIN"
 
@@ -190,6 +191,7 @@ echo "  Smee URL: $SMEE_URL"
 
 # Create systemd service file
 # Note: Port 8000 is where Coolify runs - smee forwards webhooks there
+# Note: Running as root per original specification; consider using a less privileged user
 echo "  Creating systemd service..."
 sudo tee /etc/systemd/system/smee.service > /dev/null << EOF
 [Unit]
