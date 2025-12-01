@@ -53,6 +53,7 @@ pi-dev-toolkit/
 ├── .editorconfig        # Editor standardization
 ├── .env.example         # Environment variables template
 ├── .gitignore           # Git ignore rules
+├── .vimrc               # Vim configuration
 ├── .vscode/             # VS Code settings
 │   ├── extensions.json  # Recommended extensions
 │   └── settings.json    # Editor settings
