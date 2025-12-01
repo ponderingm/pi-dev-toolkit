@@ -34,6 +34,8 @@ cd pi-dev-toolkit
 - システムパッケージの更新
 - 必須ツールのインストール（curl, git, vim, htop）
 - Vim 設定ファイル (`.vimrc`) のホームディレクトリへのコピー
+- GitHub CLI のインストールと認証
+- Git の設定（GitHub から自動取得したユーザー名・メールアドレス）
 - Tailscale のインストール
 - Coolify のインストール
 
