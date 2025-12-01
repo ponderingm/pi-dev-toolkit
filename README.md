@@ -38,6 +38,7 @@ bash setup/scripts/setup.sh
 - Git の設定（GitHub から自動取得したユーザー名・メールアドレス）
 - Tailscale のインストール
 - Coolify のインストール
+- smee.io クライアントのインストールと Webhook プロキシの設定
 
 ### 2. 新規プロジェクトの作成
 
