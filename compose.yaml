@@ -1,0 +1,31 @@
+services:
+  app:
+    # ============================================================
+    # Uncomment ONE of the following language configurations:
+    # ============================================================
+
+    # --- Node.js ---
+    # image: node:20-slim
+    # command: npm run dev
+    # working_dir: /app
+
+    # --- Python ---
+    # image: python:3.12-slim
+    # command: python -m http.server 3000
+    # working_dir: /app
+
+    # --- Go ---
+    # image: golang:1.22-alpine
+    # command: go run .
+    # working_dir: /app
+
+    # ============================================================
+    # Common configuration (do not modify)
+    # ============================================================
+    volumes:
+      - .:/app
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    restart: unless-stopped
