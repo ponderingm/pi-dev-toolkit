@@ -98,9 +98,6 @@ pi-dev-toolkit/
 │   │   └── workflows/
 │   │       └── release.yml       # 自動バージョン管理
 │   ├── compose.yaml              # Docker Compose 設定
-│   ├── instructions/             # 開発ガイドライン
-│   │   ├── global.md             # 汎用的な指示書
-│   │   └── local.md              # プロジェクト固有の指示書
 │   └── nixpacks.toml             # Nixpacks ビルド設定
 ├── .editorconfig                 # エディタ設定
 ├── .gitignore                    # Git 除外ルール
