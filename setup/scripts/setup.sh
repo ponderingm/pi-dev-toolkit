@@ -16,12 +16,12 @@ sudo apt install -y curl git htop vim
 # Configure Vim
 echo "[3/5] Configuring Vim..."
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(dirname "$SCRIPT_DIR")"
-if [ -f "$REPO_ROOT/.vimrc" ]; then
-  cp "$REPO_ROOT/.vimrc" "$HOME/.vimrc"
+SETUP_DIR="$(dirname "$SCRIPT_DIR")"
+if [ -f "$SETUP_DIR/.vimrc" ]; then
+  cp "$SETUP_DIR/.vimrc" "$HOME/.vimrc"
   echo "  .vimrc copied to $HOME/.vimrc"
 else
-  echo "  Warning: .vimrc not found in repository"
+  echo "  Warning: .vimrc not found in setup directory"
 fi
 
 # Install Tailscale
