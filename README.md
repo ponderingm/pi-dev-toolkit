@@ -17,13 +17,13 @@ GitHub で「Use this template」をクリックして、このテンプレー�
 
 ### 2. Raspberry Pi のセットアップ
 
-Raspberry Pi でセットアップスクリプトを実行します：
+Raspberry Pi でセットアップスクリプトを実行します（`<your-username>` を自分の GitHub ユーザー名に置き換えてください）：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/<your-username>/pi-dev-toolkit/main/scripts/setup.sh | bash
 ```
 
-または、クローンしてローカルで実行：
+または、クローンしてローカルで実行（`<your-username>` を自分の GitHub ユーザー名に置き換えてください）：
 
 ```bash
 git clone https://github.com/<your-username>/pi-dev-toolkit.git
