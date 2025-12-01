@@ -1,51 +1,51 @@
-# AI Assistant Instructions
+# AI アシスタント向け指示
 
-This document provides system instructions for AI assistants (ChatGPT, Claude, etc.) working on this project.
+このドキュメントは、本プロジェクトで作業する AI アシスタント（ChatGPT、Claude など）向けのシステム指示を提供します。
 
-## Environment
+## 環境
 
-| Environment | Platform           | Description                          |
-|-------------|--------------------|--------------------------------------|
-| Local       | Docker Compose     | Development on local PC              |
-| Production  | Coolify on Pi4     | Deployed on Raspberry Pi 4 (ARM64)   |
+| 環境       | プラットフォーム   | 説明                                 |
+|------------|--------------------|------------------------------------|
+| ローカル   | Docker Compose     | ローカル PC での開発                 |
+| 本番       | Coolify on Pi4     | Raspberry Pi 4 (ARM64) にデプロイ   |
 
-## Development Rules
+## 開発ルール
 
-### 1. Build Configuration
+### 1. ビルド設定
 
-- **Do NOT write Dockerfile manually** - Rely on Nixpacks for automatic build detection
-- Nixpacks configuration can be customized in `nixpacks.toml` if needed
-- Coolify handles the build and deployment process automatically
+- **Dockerfile を手動で書かない** - Nixpacks による自動ビルド検出に依存する
+- 必要に応じて `nixpacks.toml` で Nixpacks 設定をカスタマイズ可能
+- Coolify がビルドとデプロイプロセスを自動的に処理
 
-### 2. Data Persistence
+### 2. データ永続化
 
-- **Always use Docker volumes** for persistent data
-- Never store persistent data inside the container filesystem
-- Define volumes in `compose.yaml` for local development
+- 永続データには**必ず Docker ボリュームを使用**する
+- コンテナのファイルシステム内に永続データを保存しない
+- ローカル開発用に `compose.yaml` でボリュームを定義
 
-### 3. Logging
+### 3. ロギング
 
-- **Output all logs to stdout** - Do not write to log files
-- Use structured logging (JSON format) when possible
-- Coolify and Docker will capture stdout/stderr automatically
+- **すべてのログを stdout に出力** - ログファイルに書き込まない
+- 可能な限り構造化ログ（JSON 形式）を使用
+- Coolify と Docker が自動的に stdout/stderr をキャプチャ
 
-### 4. Environment Variables
+### 4. 環境変数
 
-- Use `.env` file for local development (copy from `.env.example`)
-- Configure environment variables in Coolify dashboard for production
-- Never commit `.env` files to the repository
+- ローカル開発では `.env` ファイルを使用（`.env.example` からコピー）
+- 本番環境では Coolify ダッシュボードで環境変数を設定
+- `.env` ファイルをリポジトリにコミットしない
 
-### 5. Port Configuration
+### 5. ポート設定
 
-- Default application port: `3000`
-- Expose ports through Docker Compose for local development
-- Coolify handles port mapping in production
+- デフォルトのアプリケーションポート: `3000`
+- ローカル開発では Docker Compose でポートを公開
+- 本番では Coolify がポートマッピングを処理
 
-## Architecture Overview
+## アーキテクチャ概要
 
 ```
 ┌─────────────────┐     Git Push     ┌─────────────────┐
-│   Local PC      │ ───────────────► │    GitHub       │
+│   ローカル PC    │ ───────────────► │    GitHub       │
 │ (Docker Compose)│                  │                 │
 └─────────────────┘                  └────────┬────────┘
                                               │
@@ -59,7 +59,7 @@ This document provides system instructions for AI assistants (ChatGPT, Claude, e
                                               │ Tailscale
                                               ▼
                                      ┌─────────────────┐
-                                     │  Mesh Network   │
-                                     │   (Private)     │
+                                     │  メッシュネットワーク │
+                                     │   (プライベート)   │
                                      └─────────────────┘
 ```

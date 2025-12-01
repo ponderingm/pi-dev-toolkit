@@ -1,29 +1,29 @@
 # pi-dev-toolkit
 
-Template repository for Raspberry Pi development environment with Coolify and Tailscale.
+Raspberry Pi 開発環境のテンプレートリポジトリ（Coolify と Tailscale を使用）
 
-## Overview
+## 概要
 
-- **Target:** Raspberry Pi 4 (ARM64)
+- **対象:** Raspberry Pi 4 (ARM64)
 - **OS:** Raspberry Pi OS Lite (64-bit)
-- **Infrastructure:** Coolify (PaaS), Tailscale (Mesh VPN)
-- **Workflow:** Local PC (Docker Compose) → Git Push → Coolify Auto Deploy
+- **インフラ:** Coolify (PaaS), Tailscale (メッシュ VPN)
+- **ワークフロー:** ローカル PC (Docker Compose) → Git Push → Coolify 自動デプロイ
 
-## Quick Start
+## クイックスタート
 
-### 1. Use as Template
+### 1. テンプレートとして使用
 
-Click "Use this template" on GitHub to create a new repository based on this template.
+GitHub で「Use this template」をクリックして、このテンプレートに基づいた新しいリポジトリを作成してください。
 
-### 2. Raspberry Pi Setup
+### 2. Raspberry Pi のセットアップ
 
-Run the setup script on your Raspberry Pi:
+Raspberry Pi でセットアップスクリプトを実行します（`<your-username>` を自分の GitHub ユーザー名に置き換えてください）：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/<your-username>/pi-dev-toolkit/main/scripts/setup.sh | bash
 ```
 
-Or clone and run locally:
+または、クローンしてローカルで実行（`<your-username>` を自分の GitHub ユーザー名に置き換えてください）：
 
 ```bash
 git clone https://github.com/<your-username>/pi-dev-toolkit.git
@@ -32,46 +32,46 @@ chmod +x scripts/setup.sh
 sudo ./scripts/setup.sh
 ```
 
-### 3. Local Development
+### 3. ローカル開発
 
-1. Copy the environment file:
+1. 環境ファイルをコピー：
    ```bash
    cp .env.example .env
    ```
 
-2. Edit `compose.yaml` and uncomment the language configuration you need (Node.js, Python, or Go).
+2. `compose.yaml` を編集し、必要な言語設定（Node.js、Python、または Go）のコメントを解除します。
 
-3. Start the development container:
+3. 開発コンテナを起動：
    ```bash
    docker compose up
    ```
 
-## Project Structure
+## プロジェクト構成
 
 ```
 pi-dev-toolkit/
-├── .editorconfig        # Editor standardization
-├── .env.example         # Environment variables template
-├── .gitignore           # Git ignore rules
+├── .editorconfig        # エディタ設定の標準化
+├── .env.example         # 環境変数テンプレート
+├── .gitignore           # Git 除外ルール
+├── .vscode/             # VS Code 設定
+│   ├── extensions.json  # 推奨拡張機能
+│   └── settings.json    # エディタ設定
 ├── .vimrc               # Vim configuration
-├── .vscode/             # VS Code settings
-│   ├── extensions.json  # Recommended extensions
-│   └── settings.json    # Editor settings
-├── compose.yaml         # Docker Compose for local development
+├── compose.yaml         # ローカル開発用 Docker Compose
 ├── docs/
-│   └── ai_instruction.md # AI assistant instructions
-├── nixpacks.toml        # Coolify/Nixpacks configuration
-├── README.md            # This file
+│   └── ai_instruction.md # AI アシスタント向け指示
+├── nixpacks.toml        # Coolify/Nixpacks 設定
+├── README.md            # このファイル
 └── scripts/
-    └── setup.sh         # Raspberry Pi setup script
+    └── setup.sh         # Raspberry Pi セットアップスクリプト
 ```
 
-## Development Workflow
+## 開発ワークフロー
 
-1. Develop locally using Docker Compose
-2. Push to GitHub
-3. Coolify automatically deploys to Raspberry Pi
+1. Docker Compose を使用してローカルで開発
+2. GitHub にプッシュ
+3. Coolify が自動的に Raspberry Pi にデプロイ
 
-## License
+## ライセンス
 
 MIT

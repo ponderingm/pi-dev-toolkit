@@ -2,7 +2,7 @@
 set -e
 
 echo "=========================================="
-echo "Raspberry Pi Development Environment Setup"
+echo "Raspberry Pi 開発環境セットアップ"
 echo "=========================================="
 
 # Update system packages
@@ -34,10 +34,10 @@ curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
 
 echo ""
 echo "=========================================="
-echo "Setup complete!"
+echo "セットアップ完了！"
 echo "=========================================="
 echo ""
-echo "Next steps:"
-echo "  1. Run 'sudo tailscale up' manually to connect to your Tailscale network"
-echo "  2. Access Coolify at http://localhost:8000"
+echo "次のステップ:"
+echo "  1. 'sudo tailscale up' を手動で実行して Tailscale ネットワークに接続"
+echo "  2. http://localhost:8000 で Coolify にアクセス"
 echo ""
