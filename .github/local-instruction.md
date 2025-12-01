@@ -56,3 +56,9 @@ GitHub への push をトリガーに Coolify が自動的にビルド・デプ�
 `.github/copilot-instructions.md` を更新したら、必ず `templates/.github/copilot-instructions.md` も同じ内容に更新してください。
 
 これにより、新規プロジェクト作成時に最新のガイドラインが反映されます。
+
+### シェル出力に関するルール
+
+- セットアップスクリプトやシェル上に表示する文字列は、マルチバイト文字（日本語）を使用しないこと。
+- 出力は ASCII の英語で記述する（例: `Setup complete!`, `Installing GitHub CLI...`）。
+- ドキュメントやコードコメントは日本語で構わないが、端末出力は英語とする。

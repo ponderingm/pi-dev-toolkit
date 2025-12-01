@@ -2,7 +2,7 @@
 set -e
 
 echo "=========================================="
-echo "Raspberry Pi 開発環境セットアップ"
+echo "Raspberry Pi Dev Environment Setup"
 echo "=========================================="
 
 # Update system packages
@@ -27,16 +27,16 @@ fi
 # Install GitHub CLI
 echo "[4/7] Installing GitHub CLI..."
 if ! command -v gh &> /dev/null; then
-  # GitHub CLI 公式リポジトリの追加
-  # wget がインストールされていない場合はインストール
+  # Add GitHub CLI official repository
+  # Install wget if missing
   if ! type -p wget >/dev/null; then
     sudo apt update && sudo apt install wget -y
   fi
   
-  # キーリングディレクトリの作成
+  # Create keyring directory
   sudo mkdir -p -m 755 /etc/apt/keyrings
   
-  # GPG キーのダウンロードとインストール
+  # Download and install GPG key
   out=$(mktemp)
   if wget -nv -O "$out" https://cli.github.com/packages/githubcli-archive-keyring.gpg; then
     sudo cp "$out" /etc/apt/keyrings/githubcli-archive-keyring.gpg
@@ -44,69 +44,108 @@ if ! command -v gh &> /dev/null; then
     sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
   else
     rm -f "$out"
-    echo "  Error: GitHub CLI のキーリングのダウンロードに失敗しました"
+    echo "  Error: Failed to download GitHub CLI keyring"
     exit 1
   fi
   
-  # APT リポジトリの追加
+  # Add APT repository
   echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
   
-  # GitHub CLI のインストール
+  # Install GitHub CLI
   sudo apt update
   sudo apt install gh -y
-  echo "  GitHub CLI をインストールしました"
+  echo "  GitHub CLI installed"
 else
-  echo "  GitHub CLI は既にインストールされています"
+  echo "  GitHub CLI already installed"
 fi
 
 # Configure Git using GitHub CLI
 echo "[5/7] Configuring Git..."
 
-# GitHub認証済みかチェック
+# Check GitHub auth status
 if gh auth status &>/dev/null; then
-  echo "  GitHub CLI は既に認証されています"
+  echo "  GitHub CLI already authenticated"
 else
-  echo "  GitHub CLI で認証を行います..."
+  echo "  Authenticating with GitHub CLI..."
   gh auth login
 fi
 
-# GitHubからユーザー情報を取得してGitを設定
+# Fetch user info from GitHub and configure Git
 if gh auth status &>/dev/null; then
-  # ユーザー名の取得と設定
+  # Get and set username
   gh_username=$(gh api user --jq '.login' 2>/dev/null || echo "")
   if [ -n "$gh_username" ]; then
     current_name=$(git config --global user.name 2>/dev/null || echo "")
     if [ "$current_name" != "$gh_username" ]; then
       git config --global user.name "$gh_username"
-      echo "  Git ユーザー名を '$gh_username' に設定しました（GitHub から取得）"
+      echo "  Set Git user.name to '$gh_username' (from GitHub)"
     else
-      echo "  Git ユーザー名は既に '$gh_username' に設定されています"
+      echo "  Git user.name already set to '$gh_username'"
     fi
+  else
+    # Default when username cannot be fetched from GitHub
+    git config --global user.name "pi"
+    echo "  Set Git user.name to 'pi' (default)"
   fi
   
-  # メールアドレスの取得と設定
-  # プライマリメールを取得（プライベートメールの場合はnoreplyを使用）
-  gh_email=$(gh api user/emails --jq '.[] | select(.primary == true) | .email' 2>/dev/null || echo "")
-  if [ -z "$gh_email" ]; then
-    # プライベートメールの場合、GitHub noreplyアドレスを使用
-    gh_id=$(gh api user --jq '.id' 2>/dev/null || echo "")
+  # Get and set email (avoid setting JSON error payload)
+  # 1) Public email (/user.email)
+  gh_public_email=$(gh api user --jq '.email' --silent 2>/dev/null || echo "")
+  # 2) Primary email (/user/emails; requires user:email scope). Validate to avoid JSON
+  gh_primary_email=$(gh api user/emails --jq '.[] | select(.primary == true) | .email' --silent 2>/dev/null || echo "")
+
+  # Basic email format validation to reject JSON-like strings
+  is_valid_email() {
+    echo "$1" | grep -E '^[^@\s]+@[^@\s]+\.[^@\s]+$' >/dev/null 2>&1
+  }
+
+  gh_email=""
+  # GitHubからユーザー名が取得できない場合はメールもデフォルト設定
+  if [ -z "$gh_username" ]; then
+    gh_email="raspberry@example.com"
+  fi
+  if [ -n "$gh_public_email" ] && is_valid_email "$gh_public_email"; then
+    gh_email="$gh_public_email"
+  elif [ -n "$gh_primary_email" ] && is_valid_email "$gh_primary_email"; then
+    gh_email="$gh_primary_email"
+  else
+    # 3) Fallback: generate noreply address
+    gh_id=$(gh api user --jq '.id' --silent 2>/dev/null || echo "")
     if [ -n "$gh_id" ] && [ -n "$gh_username" ]; then
       gh_email="${gh_id}+${gh_username}@users.noreply.github.com"
     fi
   fi
-  
-  if [ -n "$gh_email" ]; then
+
+  if [ -n "$gh_email" ] && is_valid_email "$gh_email"; then
     current_email=$(git config --global user.email 2>/dev/null || echo "")
     if [ "$current_email" != "$gh_email" ]; then
       git config --global user.email "$gh_email"
-      echo "  Git メールアドレスを '$gh_email' に設定しました（GitHub から取得）"
+      if [ "$gh_email" = "raspberry@example.com" ]; then
+        echo "  Set Git user.email to 'raspberry@example.com' (default)"
+      else
+        echo "  Set Git user.email to '$gh_email' (from GitHub)"
+      fi
     else
-      echo "  Git メールアドレスは既に '$gh_email' に設定されています"
+      if [ "$gh_email" = "raspberry@example.com" ]; then
+        echo "  Git user.email already set to 'raspberry@example.com'"
+      else
+        echo "  Git user.email already set to '$gh_email'"
+      fi
+    fi
+  else
+    echo "  Warning: Failed to get a valid email from GitHub."
+    echo "           If username was not fetched, default 'raspberry@example.com' will be used."
+    if [ -z "$gh_email" ]; then
+      gh_email="raspberry@example.com"
+      git config --global user.email "$gh_email"
+      echo "  Set Git user.email to 'raspberry@example.com' (default)"
+    else
+      echo "           Please set 'git config --global user.email <your-email>' manually"
     fi
   fi
 else
-  echo "  Warning: GitHub CLI が認証されていないため、Git の設定をスキップしました"
-  echo "  後で 'gh auth login' を実行してから、再度このスクリプトを実行してください"
+  echo "  Warning: GitHub CLI not authenticated; skipping Git configuration"
+  echo "  Run 'gh auth login' and re-run this script later"
 fi
 
 # Install Tailscale
@@ -119,10 +158,10 @@ curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
 
 echo ""
 echo "=========================================="
-echo "セットアップ完了！"
+echo "Setup complete!"
 echo "=========================================="
 echo ""
-echo "次のステップ:"
-echo "  1. 'sudo tailscale up' を手動で実行して Tailscale ネットワークに接続"
-echo "  2. http://localhost:8000 で Coolify にアクセス"
+echo "Next steps:"
+echo "  1. Run 'sudo tailscale up' to join the Tailscale network"
+echo "  2. Access Coolify at http://localhost:8000"
 echo ""
