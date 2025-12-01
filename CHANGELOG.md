@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/ponderingm/pi-dev-toolkit/compare/v1.1.0...v1.2.0) (2025-12-01)
+
+
+### Features
+
+* setupにsmee.ioを追加 ([#17](https://github.com/ponderingm/pi-dev-toolkit/issues/17)) ([dbd4d14](https://github.com/ponderingm/pi-dev-toolkit/commit/dbd4d148ab2cb5039781b265492efa189f2f89b9))
+
 ## [1.1.0](https://github.com/ponderingm/pi-dev-toolkit/compare/v1.0.0...v1.1.0) (2025-12-01)
 
 
