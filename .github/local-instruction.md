@@ -46,8 +46,8 @@ GitHub への push をトリガーに Coolify が自動的にビルド・デプ�
 ### 重要事項
 
 - コミットメッセージは必ず上記のプレフィックスで始める
-- Release Please により自動的にバージョン管理とCHANGELOG生成が行われる
-- `main` ブランチへのマージ時に自動でリリースPRが作成される
+- Continuous Releaseにより `main` ブランチへのマージ時に自動でバージョンタグとGitHub Releaseが作成される
+- メジャーアップデートの際は、リリース後に GitHub Releases ページで説明を追記することを推奨
 
 ## プロジェクト固有の設定
 

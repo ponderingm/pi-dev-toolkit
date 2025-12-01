@@ -1,18 +1,45 @@
-name: Release Please
+name: 🚀 Continuous Release
 
 on:
   push:
     branches:
       - main
+    # 無限ループ防止: リリース処理自体のコミットでは発火させない設定などは
+    # 今回の「タグ打ち」方式なら不要（タグ作成はpushトリガーに引っかからないため）
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
-  release-please:
+  release:
     runs-on: ubuntu-latest
+    # 自分（オーナー）のマージのみ発火させる安全装置
+    if: github.actor == github.repository_owner
+
     steps:
-      - uses: googleapis/release-please-action@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          release-type: simple
+          fetch-depth: 0
+
+      # 1. バージョン計算 & タグ打ち
+      - name: Bump version and push tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: patch
+          # ここでプレフィックスとバージョンの対応を明示できます
+          release_branches: main
+
+      # 2. GitHubリリース作成（ここがChangelogになります）
+      - name: Create a GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+          name: Release ${{ steps.tag_version.outputs.new_tag }}
+          body: ${{ steps.tag_version.outputs.changelog }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # メジャーアップデート(vX.0.0)の時だけ「ドラフト(下書き)」にして
+          # 公開前に人間が編集するチャンスを作る設定（お好みで！）
+          # draft: ${{ contains(steps.tag_version.outputs.new_tag, '.0.0') }}
