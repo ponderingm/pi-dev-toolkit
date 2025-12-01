@@ -34,12 +34,10 @@ cd pi-dev-toolkit
 - システムパッケージの更新
 - 必須ツールのインストール（curl, git, vim, htop）
 - Vim 設定ファイル (`.vimrc`) のホームディレクトリへのコピー
-- Git の設定（ユーザー名・メールアドレスの対話的入力）
-- GitHub CLI のインストール
+- GitHub CLI のインストールと認証
+- Git の設定（GitHub から自動取得したユーザー名・メールアドレス）
 - Tailscale のインストール
 - Coolify のインストール
-
-セットアップ後、`gh auth login` を実行して GitHub にログインしてください。
 
 ### 2. 新規プロジェクトの作成
 

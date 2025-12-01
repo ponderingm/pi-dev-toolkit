@@ -24,52 +24,8 @@ else
   echo "  Warning: .vimrc not found in setup directory"
 fi
 
-# Configure Git
-echo "[4/7] Configuring Git..."
-# Git ユーザー名の設定
-current_name=$(git config --global user.name 2>/dev/null || echo "")
-if [ -n "$current_name" ]; then
-  echo "  現在の Git ユーザー名: $current_name"
-  read -r -p "  新しいユーザー名を入力（変更しない場合は Enter）: " git_name
-  if [ -n "$git_name" ]; then
-    git config --global user.name "$git_name"
-    echo "  Git ユーザー名を '$git_name' に設定しました"
-  else
-    echo "  Git ユーザー名は変更しませんでした"
-  fi
-else
-  read -r -p "  Git ユーザー名を入力: " git_name
-  if [ -n "$git_name" ]; then
-    git config --global user.name "$git_name"
-    echo "  Git ユーザー名を '$git_name' に設定しました"
-  else
-    echo "  Warning: Git ユーザー名が設定されていません"
-  fi
-fi
-
-# Git メールアドレスの設定
-current_email=$(git config --global user.email 2>/dev/null || echo "")
-if [ -n "$current_email" ]; then
-  echo "  現在の Git メールアドレス: $current_email"
-  read -r -p "  新しいメールアドレスを入力（変更しない場合は Enter）: " git_email
-  if [ -n "$git_email" ]; then
-    git config --global user.email "$git_email"
-    echo "  Git メールアドレスを '$git_email' に設定しました"
-  else
-    echo "  Git メールアドレスは変更しませんでした"
-  fi
-else
-  read -r -p "  Git メールアドレスを入力: " git_email
-  if [ -n "$git_email" ]; then
-    git config --global user.email "$git_email"
-    echo "  Git メールアドレスを '$git_email' に設定しました"
-  else
-    echo "  Warning: Git メールアドレスが設定されていません"
-  fi
-fi
-
 # Install GitHub CLI
-echo "[5/7] Installing GitHub CLI..."
+echo "[4/7] Installing GitHub CLI..."
 if ! command -v gh &> /dev/null; then
   # GitHub CLI 公式リポジトリの追加
   # wget がインストールされていない場合はインストール
@@ -103,6 +59,56 @@ else
   echo "  GitHub CLI は既にインストールされています"
 fi
 
+# Configure Git using GitHub CLI
+echo "[5/7] Configuring Git..."
+
+# GitHub認証済みかチェック
+if gh auth status &>/dev/null; then
+  echo "  GitHub CLI は既に認証されています"
+else
+  echo "  GitHub CLI で認証を行います..."
+  gh auth login
+fi
+
+# GitHubからユーザー情報を取得してGitを設定
+if gh auth status &>/dev/null; then
+  # ユーザー名の取得と設定
+  gh_username=$(gh api user --jq '.login' 2>/dev/null || echo "")
+  if [ -n "$gh_username" ]; then
+    current_name=$(git config --global user.name 2>/dev/null || echo "")
+    if [ "$current_name" != "$gh_username" ]; then
+      git config --global user.name "$gh_username"
+      echo "  Git ユーザー名を '$gh_username' に設定しました（GitHub から取得）"
+    else
+      echo "  Git ユーザー名は既に '$gh_username' に設定されています"
+    fi
+  fi
+  
+  # メールアドレスの取得と設定
+  # プライマリメールを取得（プライベートメールの場合はnoreplyを使用）
+  gh_email=$(gh api user/emails --jq '.[] | select(.primary == true) | .email' 2>/dev/null || echo "")
+  if [ -z "$gh_email" ]; then
+    # プライベートメールの場合、GitHub noreplyアドレスを使用
+    gh_id=$(gh api user --jq '.id' 2>/dev/null || echo "")
+    if [ -n "$gh_id" ] && [ -n "$gh_username" ]; then
+      gh_email="${gh_id}+${gh_username}@users.noreply.github.com"
+    fi
+  fi
+  
+  if [ -n "$gh_email" ]; then
+    current_email=$(git config --global user.email 2>/dev/null || echo "")
+    if [ "$current_email" != "$gh_email" ]; then
+      git config --global user.email "$gh_email"
+      echo "  Git メールアドレスを '$gh_email' に設定しました（GitHub から取得）"
+    else
+      echo "  Git メールアドレスは既に '$gh_email' に設定されています"
+    fi
+  fi
+else
+  echo "  Warning: GitHub CLI が認証されていないため、Git の設定をスキップしました"
+  echo "  後で 'gh auth login' を実行してから、再度このスクリプトを実行してください"
+fi
+
 # Install Tailscale
 echo "[6/7] Installing Tailscale..."
 curl -fsSL https://tailscale.com/install.sh | sh
@@ -117,7 +123,6 @@ echo "セットアップ完了！"
 echo "=========================================="
 echo ""
 echo "次のステップ:"
-echo "  1. 'gh auth login' を実行して GitHub にログイン"
-echo "  2. 'sudo tailscale up' を手動で実行して Tailscale ネットワークに接続"
-echo "  3. http://localhost:8000 で Coolify にアクセス"
+echo "  1. 'sudo tailscale up' を手動で実行して Tailscale ネットワークに接続"
+echo "  2. http://localhost:8000 で Coolify にアクセス"
 echo ""
