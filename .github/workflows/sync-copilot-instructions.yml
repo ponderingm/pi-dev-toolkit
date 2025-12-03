@@ -1,0 +1,35 @@
+name: Sync copilot-instructions to templates
+
+on:
+  push:
+    paths:
+      - '.github/copilot-instructions.md'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Copy file to templates
+        run: |
+          mkdir -p templates/.github
+          cp .github/copilot-instructions.md templates/.github/copilot-instructions.md
+
+      - name: Commit and push if changed
+        run: |
+          git add templates/.github/copilot-instructions.md
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: sync .github/copilot-instructions.md to templates [skip ci]"
+            git push origin HEAD:main
+          else
+            echo "No changes to commit"
+          fi

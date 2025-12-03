@@ -49,6 +49,10 @@ GitHub への push をトリガーに Coolify が自動的にビルド・デプ�
 - Continuous Releaseにより `main` ブランチへのマージ時に自動でバージョンタグとGitHub Releaseが作成される
 - メジャーアップデートの際は、リリース後に GitHub Releases ページで説明を追記することを推奨
 
+### CI スキップ
+
+ドキュメントのみの変更や軽微な修正の場合は、コミットメッセージに `[skip ci]` または `[ci skip]` を含めることで、GitHub Actions の実行をスキップできます。
+
 ## プロジェクト固有の設定
 
 ### テンプレートファイルの同期

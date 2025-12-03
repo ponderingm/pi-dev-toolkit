@@ -101,6 +101,11 @@ BREAKING CHANGE: /api/v1/users から /api/v2/users に変更
 - 機能開発は feature ブランチで行う
 - PR（Pull Request）ベースでの開発を推奨
 
+### CI スキップ
+- ドキュメントのみの変更や、ビルドが不要な軽微な変更の場合は、コミットメッセージに `[skip ci]` または `[ci skip]` を含めてください。
+- これにより、GitHub Actions の実行がスキップされ、リソースを節約できます。
+
+
 ## ドキュメンテーション
 
 ### README
