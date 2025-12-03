@@ -30,12 +30,19 @@ cd pi-dev-toolkit
 bash setup/scripts/setup.sh
 ```
 
+**オプション:**
+- `-i`, `--interactive`: 対話モード（ステップごとに確認）
+- `--no-tailscale`: Tailscale のインストールをスキップ（例）
+- `--ssh-keys "1,2"`: GitHub からインポートする公開鍵を指定
+- その他のオプションは `bash setup/scripts/setup.sh --help` で確認できます。
+
 セットアップスクリプトは以下を実行します：
 - システムパッケージの更新
 - 必須ツールのインストール（curl, git, vim, htop）
 - Vim 設定ファイル (`.vimrc`) のホームディレクトリへのコピー
 - GitHub CLI のインストールと認証
 - Git の設定（GitHub から自動取得したユーザー名・メールアドレス）
+- **SSH の設定**（鍵の生成、GitHub へのアップロード、クライアント公開鍵のインポート）
 - Tailscale のインストール
 - Coolify のインストール
 - smee.io クライアントのインストールと Webhook プロキシの設定
@@ -45,11 +52,6 @@ bash setup/scripts/setup.sh
 `templates/` ディレクトリを新しいプロジェクト名でコピーします：
 
 ```bash
-# pi-dev-toolkit リポジトリの外で実行
-cp -r pi-dev-toolkit/templates my-new-project
-cd my-new-project
-git init
-```
 
 ### 3. ローカル開発
 
