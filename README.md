@@ -33,6 +33,7 @@ bash setup/scripts/setup.sh
 **オプション:**
 - `-i`, `--interactive`: 対話モード（ステップごとに確認）
 - `--no-tailscale`: Tailscale のインストールをスキップ（例）
+- `--no-uv`: uv のインストールをスキップ
 - `--ssh-keys "1,2"`: GitHub からインポートする公開鍵を指定
 - その他のオプションは `bash setup/scripts/setup.sh --help` で確認できます。
 
@@ -46,6 +47,7 @@ bash setup/scripts/setup.sh
 - Tailscale のインストール
 - Coolify のインストール
 - smee.io クライアントのインストールと Webhook プロキシの設定
+- **uv のインストール**（Python パッケージ管理ツール）
 
 ### 2. 新規プロジェクトの作成
 
@@ -131,6 +133,7 @@ pi-dev-toolkit/
 
 - **コンテナ化**: Docker / Docker Compose
 - **ビルドツール**: Nixpacks（Dockerfile 不要）
+- **Python パッケージ管理**: uv
 - **デプロイメント**: Coolify
 - **ネットワーク**: Tailscale
 - **ホスティング**: Raspberry Pi 4 (ARM64)
