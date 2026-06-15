@@ -12,6 +12,7 @@ INSTALL_SSH=true
 INSTALL_TAILSCALE=true
 INSTALL_COOLIFY=true
 INSTALL_SMEE=true
+INSTALL_UV=true
 INTERACTIVE=false
 SSH_KEYS_SELECTION="all"
 
@@ -29,6 +30,7 @@ usage() {
   echo "  --no-tailscale       Skip Tailscale installation"
   echo "  --no-coolify         Skip Coolify installation"
   echo "  --no-smee            Skip Smee.io webhook proxy setup"
+  echo "  --no-uv              Skip uv (Python package manager) installation"
   echo "  --ssh-keys <indices> Specify GitHub public key indices to import (e.g., '1,3' or 'all')"
   echo "  -h, --help           Show this help message"
   exit 1
@@ -47,6 +49,7 @@ while [[ "$#" -gt 0 ]]; do
     --no-tailscale) INSTALL_TAILSCALE=false ;;
     --no-coolify) INSTALL_COOLIFY=false ;;
     --no-smee) INSTALL_SMEE=false ;;
+    --no-uv) INSTALL_UV=false ;;
     --ssh-keys) SSH_KEYS_SELECTION="$2"; shift ;;
     -h|--help) usage ;;
     *) echo "Unknown parameter passed: $1"; usage ;;
@@ -82,23 +85,23 @@ echo "=========================================="
 
 # Update system packages
 if should_run "Update system packages" "$INSTALL_UPDATE"; then
-  echo "[1/9] Updating system packages..."
+  echo "[1/10] Updating system packages..."
   sudo apt update && sudo apt upgrade -y
 else
-  echo "[1/9] Skipping system packages update"
+  echo "[1/10] Skipping system packages update"
 fi
 
 # Install essential tools
 if should_run "Install essential tools" "$INSTALL_TOOLS"; then
-  echo "[2/9] Installing essential tools..."
+  echo "[2/10] Installing essential tools..."
   sudo apt install -y curl git htop vim
 else
-  echo "[2/9] Skipping essential tools installation"
+  echo "[2/10] Skipping essential tools installation"
 fi
 
 # Configure Vim
 if should_run "Configure Vim" "$INSTALL_VIM"; then
-  echo "[3/9] Configuring Vim..."
+  echo "[3/10] Configuring Vim..."
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   SETUP_DIR="$(dirname "$SCRIPT_DIR")"
   if [ -f "$SETUP_DIR/.vimrc" ]; then
@@ -108,12 +111,12 @@ if should_run "Configure Vim" "$INSTALL_VIM"; then
     echo "  Warning: .vimrc not found in setup directory"
   fi
 else
-  echo "[3/9] Skipping Vim configuration"
+  echo "[3/10] Skipping Vim configuration"
 fi
 
 # Install GitHub CLI
 if should_run "Install GitHub CLI" "$INSTALL_GH"; then
-  echo "[4/9] Installing GitHub CLI..."
+  echo "[4/10] Installing GitHub CLI..."
   if ! command -v gh &> /dev/null; then
     # Add GitHub CLI official repository
     # Install wget if missing
@@ -147,12 +150,12 @@ if should_run "Install GitHub CLI" "$INSTALL_GH"; then
     echo "  GitHub CLI already installed"
   fi
 else
-  echo "[4/9] Skipping GitHub CLI installation"
+  echo "[4/10] Skipping GitHub CLI installation"
 fi
 
 # Configure Git using GitHub CLI
 if should_run "Configure Git" "$INSTALL_GIT"; then
-  echo "[5/9] Configuring Git..."
+  echo "[5/10] Configuring Git..."
 
   # Check GitHub auth status
   if gh auth status &>/dev/null; then
@@ -240,12 +243,12 @@ if should_run "Configure Git" "$INSTALL_GIT"; then
     echo "  Run 'gh auth login' and re-run this script later"
   fi
 else
-  echo "[5/9] Skipping Git configuration"
+  echo "[5/10] Skipping Git configuration"
 fi
 
 # Configure SSH
 if should_run "Configure SSH" "$INSTALL_SSH"; then
-  echo "[6/9] Configuring SSH..."
+  echo "[6/10] Configuring SSH..."
   ssh_key_path="$HOME/.ssh/id_ed25519"
   if [ -f "$ssh_key_path" ]; then
     echo "  SSH key already exists: $ssh_key_path"
@@ -340,28 +343,28 @@ if should_run "Configure SSH" "$INSTALL_SSH"; then
     echo "  Skipping GitHub SSH key upload (not authenticated)"
   fi
 else
-  echo "[6/9] Skipping SSH configuration"
+  echo "[6/10] Skipping SSH configuration"
 fi
 
 # Install Tailscale
 if should_run "Install Tailscale" "$INSTALL_TAILSCALE"; then
-  echo "[7/9] Installing Tailscale..."
+  echo "[7/10] Installing Tailscale..."
   curl -fsSL https://tailscale.com/install.sh | sh
 else
-  echo "[7/9] Skipping Tailscale installation"
+  echo "[7/10] Skipping Tailscale installation"
 fi
 
 # Install Coolify
 if should_run "Install Coolify" "$INSTALL_COOLIFY"; then
-  echo "[8/9] Installing Coolify..."
+  echo "[8/10] Installing Coolify..."
   curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
 else
-  echo "[8/9] Skipping Coolify installation"
+  echo "[8/10] Skipping Coolify installation"
 fi
 
 # Install smee.io client
 if should_run "Install Smee.io client" "$INSTALL_SMEE"; then
-  echo "[9/9] Setting up smee.io webhook proxy..."
+  echo "[9/10] Setting up smee.io webhook proxy..."
 
   # Check if Node.js/npm is available
   if ! command -v npm &> /dev/null; then
@@ -417,7 +420,21 @@ EOF
   sudo systemctl enable smee
   echo "  Smee service enabled (not started - update URL first if placeholder)"
 else
-  echo "[9/9] Skipping Smee.io setup"
+  echo "[9/10] Skipping Smee.io setup"
+fi
+
+# Install uv (Python package manager)
+if should_run "Install uv" "$INSTALL_UV"; then
+  echo "[10/10] Installing uv (Python package manager)..."
+  if command -v uv &> /dev/null; then
+    echo "  uv already installed: $(uv --version)"
+  else
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    echo "  uv installed"
+    echo "  Note: Restart your shell or run 'source $HOME/.local/bin/env' to use uv"
+  fi
+else
+  echo "[10/10] Skipping uv installation"
 fi
 
 echo ""
@@ -463,6 +480,11 @@ echo "Generating setup log file: $LOG_FILE"
   echo "[Tailscale]"
   echo "  Run 'sudo tailscale up' to join the network"
   echo "  Run 'tailscale status' to check connection status"
+  echo ""
+  echo "[uv (Python package manager)]"
+  echo "  Version: $(uv --version 2>/dev/null || echo 'not installed')"
+  echo "  Install path: $HOME/.local/bin/uv"
+  echo "  Shell env: source $HOME/.local/bin/env"
   echo ""
   echo "=========================================="
   echo "Next Steps"
