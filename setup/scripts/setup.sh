@@ -431,7 +431,7 @@ if should_run "Install uv" "$INSTALL_UV"; then
   else
     curl -LsSf https://astral.sh/uv/install.sh | sh
     echo "  uv installed"
-    echo "  Note: Restart your shell or run 'source \$HOME/.local/bin/env' to use uv"
+    echo "  Note: Restart your shell or run 'source $HOME/.local/bin/env' to use uv"
   fi
 else
   echo "[10/10] Skipping uv installation"
@@ -483,8 +483,8 @@ echo "Generating setup log file: $LOG_FILE"
   echo ""
   echo "[uv (Python package manager)]"
   echo "  Version: $(uv --version 2>/dev/null || echo 'not installed')"
-  echo "  Install path: \$HOME/.local/bin/uv"
-  echo "  Shell env: source \$HOME/.local/bin/env"
+  echo "  Install path: $HOME/.local/bin/uv"
+  echo "  Shell env: source $HOME/.local/bin/env"
   echo ""
   echo "=========================================="
   echo "Next Steps"
