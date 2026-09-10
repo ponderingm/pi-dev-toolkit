@@ -49,17 +49,17 @@ bash setup/scripts/setup.sh
 - Node.js のインストール（Copilot CLI に必要）
 - **Claude Code** のインストール
 - **GitHub Copilot CLI** のインストール
-- **agy_bootstrapper** のセットアップ（public な本体をclone し、非公開の
+- **agy_bootstrapper** のセットアップ（public な本体をclone し、
+  `install.sh --profiles-repo=` 経由で非公開の
   [agy-profiles-private](https://github.com/ponderingm/agy-profiles-private) から
-  本命のペルソナ・ロールをシンボリックリンクで差し込む。あわせて `agysync` という
-  shell関数を `~/.bashrc` に登録する）
+  本命のペルソナ・ロールをシンボリックリンクで差し込む）
 
-セットアップ後、ペルソナセッションは `cldp` 等のエイリアスを直接叩くのではなく、
-必ず `agysync <コマンド...>`（例: `agysync cldp yukikaze_future programmer -c`）
-経由で起動すること。実行前後にプロファイルをpull/pushして、複数マシン間で
-`memories.md` 等の状態がズレないようにする。詳細は
-[agy-profiles-private の README](https://github.com/ponderingm/agy-profiles-private/blob/main/README.md)
-を参照。
+セットアップ後は `cldp` 等のいつも通りのエイリアスでセッションを起動するだけでよい。
+本命のペルソナ・ロールがシンボリックリンクされている場合、`run_partner.py` が
+セッション前後で自動的にpull/pushするため、複数マシン間で `memories.md` 等の状態が
+ズレる心配はない（agy_bootstrapper 側の機能。詳細は
+[agy_bootstrapper の README](https://github.com/ponderingm/agy_bootstrapper/blob/main/README.md)
+の「非公開プロファイル」を参照）。
 
 ### 2. 新規プロジェクトを作る（任意）
 

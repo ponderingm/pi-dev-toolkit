@@ -23,7 +23,6 @@ NODE_MAJOR_VERSION=22
 AGY_BOOTSTRAPPER_REPO="ponderingm/agy_bootstrapper"
 AGY_PROFILES_REPO="ponderingm/agy-profiles-private"
 AGY_INSTALL_DIR="$HOME/agy_bootstrapper"
-AGY_PROFILES_DIR="$HOME/agy-profiles-private"
 AGY_ENGINES="claude,copilot"
 AGY_YOLO_MODE=false
 
@@ -427,6 +426,9 @@ else
 fi
 
 # Install agy_bootstrapper (+ private personas/roles from agy-profiles-private)
+# Cloning the private profiles repo, linking personas/roles, and syncing state
+# across machines are all handled by agy_bootstrapper's own install.sh /
+# run_partner.py (via --profiles-repo=), not here.
 if should_run "Install agy_bootstrapper" "$INSTALL_AGY_BOOTSTRAPPER"; then
   echo "[12/12] Installing agy_bootstrapper..."
 
@@ -436,53 +438,18 @@ if should_run "Install agy_bootstrapper" "$INSTALL_AGY_BOOTSTRAPPER"; then
     git clone "https://github.com/${AGY_BOOTSTRAPPER_REPO}.git" "$AGY_INSTALL_DIR"
   fi
 
-  if gh auth status &>/dev/null; then
-    if [ -d "$AGY_PROFILES_DIR/.git" ]; then
-      echo "  agy-profiles-private already cloned: $AGY_PROFILES_DIR"
-    else
-      gh repo clone "$AGY_PROFILES_REPO" "$AGY_PROFILES_DIR"
-    fi
-
-    # Link private personas/roles into the agy_bootstrapper checkout
-    # (agy_bootstrapper's own personas/.gitignore and roles/.gitignore already
-    # exclude these paths, so symlinking here never risks a public commit)
-    for d in "$AGY_PROFILES_DIR"/personas/*/; do
-      [ -d "$d" ] || continue
-      persona_name="$(basename "$d")"
-      ln -sfn "$d" "$AGY_INSTALL_DIR/personas/$persona_name"
-      echo "  Linked persona: $persona_name"
-    done
-    for d in "$AGY_PROFILES_DIR"/roles/*/; do
-      [ -d "$d" ] || continue
-      role_name="$(basename "$d")"
-      ln -sfn "$d" "$AGY_INSTALL_DIR/roles/$role_name"
-      echo "  Linked role: $role_name"
-    done
-
-    # Register 'agysync' shell function: wraps sessions with pull-before/push-after
-    # so personas/roles state (memories.md etc.) stays in sync across machines.
-    if [ -f "$AGY_PROFILES_DIR/sync-and-run.sh" ] && [ -f "$HOME/.bashrc" ] \
-      && ! grep -q "PI_DEV_TOOLKIT AGYSYNC START" "$HOME/.bashrc"; then
-      {
-        echo ""
-        echo "# === PI_DEV_TOOLKIT AGYSYNC START ==="
-        echo "agysync() {"
-        echo "  \"$AGY_PROFILES_DIR/sync-and-run.sh\" \"\$@\""
-        echo "}"
-        echo "# === PI_DEV_TOOLKIT AGYSYNC END ==="
-      } >> "$HOME/.bashrc"
-      echo "  Registered 'agysync' shell function in ~/.bashrc"
-    fi
-  else
-    echo "  Warning: GitHub CLI not authenticated; skipping private profiles ($AGY_PROFILES_REPO)"
-  fi
-
   if [ -f "$AGY_INSTALL_DIR/install.sh" ]; then
     agy_yolo_flag="--no-yolo"
     if [ "$AGY_YOLO_MODE" = true ]; then
       agy_yolo_flag="--yolo"
     fi
-    bash "$AGY_INSTALL_DIR/install.sh" "--engine=$AGY_ENGINES" "$agy_yolo_flag"
+    agy_profiles_flag=""
+    if gh auth status &>/dev/null; then
+      agy_profiles_flag="--profiles-repo=$AGY_PROFILES_REPO"
+    else
+      echo "  Warning: GitHub CLI not authenticated; skipping private profiles ($AGY_PROFILES_REPO)"
+    fi
+    bash "$AGY_INSTALL_DIR/install.sh" "--engine=$AGY_ENGINES" "$agy_yolo_flag" $agy_profiles_flag
   fi
 else
   echo "[12/12] Skipping agy_bootstrapper installation"
@@ -536,19 +503,17 @@ echo "Generating setup log file: $LOG_FILE"
   echo ""
   echo "[agy_bootstrapper]"
   echo "  Install dir: $AGY_INSTALL_DIR"
-  echo "  Private profiles: $AGY_PROFILES_DIR"
+  echo "  Private profiles repo: $AGY_PROFILES_REPO"
   echo "  Engines: $AGY_ENGINES"
-  echo "  Cross-machine sync: run sessions via 'agysync <command...>' (see agy-profiles-private/README.md)"
+  echo "  Cross-machine sync: automatic (built into run_partner.py, no extra command needed)"
   echo ""
   echo "=========================================="
   echo "Next Steps"
   echo "=========================================="
   echo ""
   echo "1. Run 'sudo tailscale up' to join the Tailscale network"
-  echo "2. Run 'source ~/.bashrc' to load agy_bootstrapper/agysync shortcut commands"
+  echo "2. Run 'source ~/.bashrc' to load agy_bootstrapper shortcut commands"
   echo "3. Run 'claude' / 'copilot' once each to complete their login"
-  echo "4. Launch persona sessions via 'agysync <command...>', not the raw alias,"
-  echo "   so memories.md etc. stay in sync across machines"
   echo ""
 } > "$LOG_FILE"
 
@@ -556,10 +521,8 @@ echo "  Log file created: $LOG_FILE"
 echo ""
 echo "Next steps:"
 echo "  1. Run 'sudo tailscale up' to join the Tailscale network"
-echo "  2. Run 'source ~/.bashrc' to load agy_bootstrapper/agysync shortcut commands"
+echo "  2. Run 'source ~/.bashrc' to load agy_bootstrapper shortcut commands"
 echo "  3. Run 'claude' / 'copilot' once each to complete their login"
-echo "  4. Launch persona sessions via 'agysync <command...>', not the raw alias,"
-echo "     so memories.md etc. stay in sync across machines"
 echo ""
 echo "Configuration saved to: $LOG_FILE"
 echo ""
