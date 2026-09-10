@@ -11,8 +11,20 @@ INSTALL_GIT=true
 INSTALL_SSH=true
 INSTALL_TAILSCALE=true
 INSTALL_UV=true
+INSTALL_NODEJS=true
+INSTALL_CLAUDE_CODE=true
+INSTALL_COPILOT_CLI=true
+INSTALL_AGY_BOOTSTRAPPER=true
 INTERACTIVE=false
 SSH_KEYS_SELECTION="all"
+
+# agy_bootstrapper / 非公開プロファイル関連の設定値
+NODE_MAJOR_VERSION=22
+AGY_BOOTSTRAPPER_REPO="ponderingm/agy_bootstrapper"
+AGY_PROFILES_REPO="ponderingm/agy-profiles-private"
+AGY_INSTALL_DIR="$HOME/agy_bootstrapper"
+AGY_ENGINES="claude,copilot"
+AGY_YOLO_MODE=false
 
 # Help message
 usage() {
@@ -27,6 +39,10 @@ usage() {
   echo "  --no-ssh             Skip SSH configuration"
   echo "  --no-tailscale       Skip Tailscale installation"
   echo "  --no-uv              Skip uv (Python package manager) installation"
+  echo "  --no-nodejs          Skip Node.js installation"
+  echo "  --no-claude-code     Skip Claude Code installation"
+  echo "  --no-copilot-cli     Skip GitHub Copilot CLI installation"
+  echo "  --no-agy-bootstrapper Skip agy_bootstrapper (+ private profiles) setup"
   echo "  --ssh-keys <indices> Specify GitHub public key indices to import (e.g., '1,3' or 'all')"
   echo "  -h, --help           Show this help message"
   exit 1
@@ -44,6 +60,10 @@ while [[ "$#" -gt 0 ]]; do
     --no-ssh) INSTALL_SSH=false ;;
     --no-tailscale) INSTALL_TAILSCALE=false ;;
     --no-uv) INSTALL_UV=false ;;
+    --no-nodejs) INSTALL_NODEJS=false ;;
+    --no-claude-code) INSTALL_CLAUDE_CODE=false ;;
+    --no-copilot-cli) INSTALL_COPILOT_CLI=false ;;
+    --no-agy-bootstrapper) INSTALL_AGY_BOOTSTRAPPER=false ;;
     --ssh-keys) SSH_KEYS_SELECTION="$2"; shift ;;
     -h|--help) usage ;;
     *) echo "Unknown parameter passed: $1"; usage ;;
@@ -79,23 +99,23 @@ echo "=========================================="
 
 # Update system packages
 if should_run "Update system packages" "$INSTALL_UPDATE"; then
-  echo "[1/8] Updating system packages..."
+  echo "[1/12] Updating system packages..."
   sudo apt update && sudo apt upgrade -y
 else
-  echo "[1/8] Skipping system packages update"
+  echo "[1/12] Skipping system packages update"
 fi
 
 # Install essential tools
 if should_run "Install essential tools" "$INSTALL_TOOLS"; then
-  echo "[2/8] Installing essential tools..."
+  echo "[2/12] Installing essential tools..."
   sudo apt install -y curl git htop vim
 else
-  echo "[2/8] Skipping essential tools installation"
+  echo "[2/12] Skipping essential tools installation"
 fi
 
 # Configure Vim
 if should_run "Configure Vim" "$INSTALL_VIM"; then
-  echo "[3/8] Configuring Vim..."
+  echo "[3/12] Configuring Vim..."
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   SETUP_DIR="$(dirname "$SCRIPT_DIR")"
   if [ -f "$SETUP_DIR/.vimrc" ]; then
@@ -105,12 +125,12 @@ if should_run "Configure Vim" "$INSTALL_VIM"; then
     echo "  Warning: .vimrc not found in setup directory"
   fi
 else
-  echo "[3/8] Skipping Vim configuration"
+  echo "[3/12] Skipping Vim configuration"
 fi
 
 # Install GitHub CLI
 if should_run "Install GitHub CLI" "$INSTALL_GH"; then
-  echo "[4/8] Installing GitHub CLI..."
+  echo "[4/12] Installing GitHub CLI..."
   if ! command -v gh &> /dev/null; then
     # Add GitHub CLI official repository
     # Install wget if missing
@@ -144,12 +164,12 @@ if should_run "Install GitHub CLI" "$INSTALL_GH"; then
     echo "  GitHub CLI already installed"
   fi
 else
-  echo "[4/8] Skipping GitHub CLI installation"
+  echo "[4/12] Skipping GitHub CLI installation"
 fi
 
 # Configure Git using GitHub CLI
 if should_run "Configure Git" "$INSTALL_GIT"; then
-  echo "[5/8] Configuring Git..."
+  echo "[5/12] Configuring Git..."
 
   # Check GitHub auth status
   if gh auth status &>/dev/null; then
@@ -237,12 +257,12 @@ if should_run "Configure Git" "$INSTALL_GIT"; then
     echo "  Run 'gh auth login' and re-run this script later"
   fi
 else
-  echo "[5/8] Skipping Git configuration"
+  echo "[5/12] Skipping Git configuration"
 fi
 
 # Configure SSH
 if should_run "Configure SSH" "$INSTALL_SSH"; then
-  echo "[6/8] Configuring SSH..."
+  echo "[6/12] Configuring SSH..."
   ssh_key_path="$HOME/.ssh/id_ed25519"
   if [ -f "$ssh_key_path" ]; then
     echo "  SSH key already exists: $ssh_key_path"
@@ -337,20 +357,20 @@ if should_run "Configure SSH" "$INSTALL_SSH"; then
     echo "  Skipping GitHub SSH key upload (not authenticated)"
   fi
 else
-  echo "[6/8] Skipping SSH configuration"
+  echo "[6/12] Skipping SSH configuration"
 fi
 
 # Install Tailscale
 if should_run "Install Tailscale" "$INSTALL_TAILSCALE"; then
-  echo "[7/8] Installing Tailscale..."
+  echo "[7/12] Installing Tailscale..."
   curl -fsSL https://tailscale.com/install.sh | sh
 else
-  echo "[7/8] Skipping Tailscale installation"
+  echo "[7/12] Skipping Tailscale installation"
 fi
 
 # Install uv (Python package manager)
 if should_run "Install uv" "$INSTALL_UV"; then
-  echo "[8/8] Installing uv (Python package manager)..."
+  echo "[8/12] Installing uv (Python package manager)..."
   if command -v uv &> /dev/null; then
     echo "  uv already installed: $(uv --version)"
   else
@@ -359,7 +379,80 @@ if should_run "Install uv" "$INSTALL_UV"; then
     echo "  Note: Restart your shell or run 'source $HOME/.local/bin/env' to use uv"
   fi
 else
-  echo "[8/8] Skipping uv installation"
+  echo "[8/12] Skipping uv installation"
+fi
+
+# Install Node.js (required by GitHub Copilot CLI)
+if should_run "Install Node.js" "$INSTALL_NODEJS"; then
+  echo "[9/12] Installing Node.js..."
+  current_node_major=$(node -v 2>/dev/null | sed 's/^v//' | cut -d. -f1)
+  if [ -n "$current_node_major" ] && [ "$current_node_major" -ge "$NODE_MAJOR_VERSION" ]; then
+    echo "  Node.js already installed: $(node -v)"
+  else
+    curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR_VERSION}.x" | sudo -E bash -
+    sudo apt install -y nodejs
+    echo "  Node.js installed: $(node -v)"
+  fi
+else
+  echo "[9/12] Skipping Node.js installation"
+fi
+
+# Install Claude Code
+if should_run "Install Claude Code" "$INSTALL_CLAUDE_CODE"; then
+  echo "[10/12] Installing Claude Code..."
+  if command -v claude &> /dev/null; then
+    echo "  Claude Code already installed"
+  else
+    curl -fsSL https://claude.ai/install.sh | bash
+    echo "  Claude Code installed"
+  fi
+else
+  echo "[10/12] Skipping Claude Code installation"
+fi
+
+# Install GitHub Copilot CLI
+if should_run "Install GitHub Copilot CLI" "$INSTALL_COPILOT_CLI"; then
+  echo "[11/12] Installing GitHub Copilot CLI..."
+  if command -v copilot &> /dev/null; then
+    echo "  GitHub Copilot CLI already installed"
+  elif command -v npm &> /dev/null; then
+    npm install -g @github/copilot
+    echo "  GitHub Copilot CLI installed"
+  else
+    echo "  Warning: npm not found; skipping GitHub Copilot CLI installation"
+  fi
+else
+  echo "[11/12] Skipping GitHub Copilot CLI installation"
+fi
+
+# Install agy_bootstrapper (+ private personas/roles from agy-profiles-private)
+# Cloning the private profiles repo, linking personas/roles, and syncing state
+# across machines are all handled by agy_bootstrapper's own install.sh /
+# run_partner.py (via --profiles-repo=), not here.
+if should_run "Install agy_bootstrapper" "$INSTALL_AGY_BOOTSTRAPPER"; then
+  echo "[12/12] Installing agy_bootstrapper..."
+
+  if [ -d "$AGY_INSTALL_DIR/.git" ]; then
+    echo "  agy_bootstrapper already cloned: $AGY_INSTALL_DIR"
+  else
+    git clone "https://github.com/${AGY_BOOTSTRAPPER_REPO}.git" "$AGY_INSTALL_DIR"
+  fi
+
+  if [ -f "$AGY_INSTALL_DIR/install.sh" ]; then
+    agy_yolo_flag="--no-yolo"
+    if [ "$AGY_YOLO_MODE" = true ]; then
+      agy_yolo_flag="--yolo"
+    fi
+    agy_profiles_flag=""
+    if gh auth status &>/dev/null; then
+      agy_profiles_flag="--profiles-repo=$AGY_PROFILES_REPO"
+    else
+      echo "  Warning: GitHub CLI not authenticated; skipping private profiles ($AGY_PROFILES_REPO)"
+    fi
+    bash "$AGY_INSTALL_DIR/install.sh" "--engine=$AGY_ENGINES" "$agy_yolo_flag" $agy_profiles_flag
+  fi
+else
+  echo "[12/12] Skipping agy_bootstrapper installation"
 fi
 
 echo ""
@@ -403,11 +496,24 @@ echo "Generating setup log file: $LOG_FILE"
   echo "  Install path: $HOME/.local/bin/uv"
   echo "  Shell env: source $HOME/.local/bin/env"
   echo ""
+  echo "[AI CLIs]"
+  echo "  Node.js: $(node -v 2>/dev/null || echo 'not installed')"
+  echo "  Claude Code: $(command -v claude &>/dev/null && echo 'installed' || echo 'not installed')"
+  echo "  GitHub Copilot CLI: $(command -v copilot &>/dev/null && echo 'installed' || echo 'not installed')"
+  echo ""
+  echo "[agy_bootstrapper]"
+  echo "  Install dir: $AGY_INSTALL_DIR"
+  echo "  Private profiles repo: $AGY_PROFILES_REPO"
+  echo "  Engines: $AGY_ENGINES"
+  echo "  Cross-machine sync: automatic (built into run_partner.py, no extra command needed)"
+  echo ""
   echo "=========================================="
   echo "Next Steps"
   echo "=========================================="
   echo ""
   echo "1. Run 'sudo tailscale up' to join the Tailscale network"
+  echo "2. Run 'source ~/.bashrc' to load agy_bootstrapper shortcut commands"
+  echo "3. Run 'claude' / 'copilot' once each to complete their login"
   echo ""
 } > "$LOG_FILE"
 
@@ -415,6 +521,8 @@ echo "  Log file created: $LOG_FILE"
 echo ""
 echo "Next steps:"
 echo "  1. Run 'sudo tailscale up' to join the Tailscale network"
+echo "  2. Run 'source ~/.bashrc' to load agy_bootstrapper shortcut commands"
+echo "  3. Run 'claude' / 'copilot' once each to complete their login"
 echo ""
 echo "Configuration saved to: $LOG_FILE"
 echo ""

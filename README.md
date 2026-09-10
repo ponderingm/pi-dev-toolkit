@@ -2,7 +2,8 @@
 
 **複数の Raspberry Pi を IoT ノードとして立ち上げるための、最小限の初期セットアップスクリプト**
 
-システム更新・基本ツール・Tailscale（メッシュVPN）・GitHub連携（gh/git/SSH）・uv など、
+システム更新・基本ツール・Tailscale（メッシュVPN）・GitHub連携（gh/git/SSH）・uv・
+Claude Code / GitHub Copilot CLI・[agy_bootstrapper](https://github.com/ponderingm/agy_bootstrapper) など、
 どのノードにも共通して必要な最低限の環境構築だけを行います。
 
 個々のプロジェクトのひな形（Docker Compose / Coolifyデプロイ / Claude Code連携など）は
@@ -31,6 +32,8 @@ bash setup/scripts/setup.sh
 - `-i`, `--interactive`: 対話モード（ステップごとに確認）
 - `--no-tailscale`: Tailscale のインストールをスキップ（例）
 - `--no-uv`: uv のインストールをスキップ
+- `--no-nodejs` / `--no-claude-code` / `--no-copilot-cli`: 各AI CLIのインストールをスキップ
+- `--no-agy-bootstrapper`: agy_bootstrapper（+ 非公開プロファイル）のセットアップをスキップ
 - `--ssh-keys "1,2"`: GitHub からインポートする公開鍵を指定
 - その他のオプションは `bash setup/scripts/setup.sh --help` で確認できます。
 
@@ -43,6 +46,20 @@ bash setup/scripts/setup.sh
 - **SSH の設定**（鍵の生成、GitHub へのアップロード、クライアント公開鍵のインポート）
 - Tailscale のインストール
 - **uv のインストール**（Python パッケージ管理ツール）
+- Node.js のインストール（Copilot CLI に必要）
+- **Claude Code** のインストール
+- **GitHub Copilot CLI** のインストール
+- **agy_bootstrapper** のセットアップ（public な本体をclone し、
+  `install.sh --profiles-repo=` 経由で非公開の
+  [agy-profiles-private](https://github.com/ponderingm/agy-profiles-private) から
+  本命のペルソナ・ロールをシンボリックリンクで差し込む）
+
+セットアップ後は `cldp` 等のいつも通りのエイリアスでセッションを起動するだけでよい。
+本命のペルソナ・ロールがシンボリックリンクされている場合、`run_partner.py` が
+セッション前後で自動的にpull/pushするため、複数マシン間で `memories.md` 等の状態が
+ズレる心配はない（agy_bootstrapper 側の機能。詳細は
+[agy_bootstrapper の README](https://github.com/ponderingm/agy_bootstrapper/blob/main/README.md)
+の「非公開プロファイル」を参照）。
 
 ### 2. 新規プロジェクトを作る（任意）
 
@@ -92,9 +109,23 @@ pi-dev-toolkit/
 ## 技術スタック
 
 - **Python パッケージ管理**: uv
+- **AI CLI**: Claude Code, GitHub Copilot CLI
+- **AIパートナー起動基盤**: [agy_bootstrapper](https://github.com/ponderingm/agy_bootstrapper)
 - **ネットワーク**: Tailscale
 - **ホスティング**: Raspberry Pi 4 (ARM64)
 - **CI/CD**: GitHub Actions + Continuous Release
+
+## agy_bootstrapper の公開/非公開の分け方
+
+[agy_bootstrapper](https://github.com/ponderingm/agy_bootstrapper) 本体は public。
+`personas/*`（`sample/` を除く）と `roles/private_*/` は本体側の `.gitignore` で
+保護されているが、それだけだと本命のペルソナ・ロールがどのマシンにも同期されない。
+
+そこで [agy-profiles-private](https://github.com/ponderingm/agy-profiles-private)
+（private、同じディレクトリ構造）に本命データだけを分離して置き、`setup.sh` が
+agy_bootstrapper のチェックアウトへシンボリックリンクで差し込む。詳細は
+[agy-profiles-private の README](https://github.com/ponderingm/agy-profiles-private/blob/main/README.md)
+を参照。
 
 ## ライセンス
 
