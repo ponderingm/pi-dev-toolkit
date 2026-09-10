@@ -10,8 +10,6 @@ INSTALL_GH=true
 INSTALL_GIT=true
 INSTALL_SSH=true
 INSTALL_TAILSCALE=true
-INSTALL_COOLIFY=true
-INSTALL_SMEE=true
 INSTALL_UV=true
 INTERACTIVE=false
 SSH_KEYS_SELECTION="all"
@@ -28,8 +26,6 @@ usage() {
   echo "  --no-git             Skip Git configuration"
   echo "  --no-ssh             Skip SSH configuration"
   echo "  --no-tailscale       Skip Tailscale installation"
-  echo "  --no-coolify         Skip Coolify installation"
-  echo "  --no-smee            Skip Smee.io webhook proxy setup"
   echo "  --no-uv              Skip uv (Python package manager) installation"
   echo "  --ssh-keys <indices> Specify GitHub public key indices to import (e.g., '1,3' or 'all')"
   echo "  -h, --help           Show this help message"
@@ -47,8 +43,6 @@ while [[ "$#" -gt 0 ]]; do
     --no-git) INSTALL_GIT=false ;;
     --no-ssh) INSTALL_SSH=false ;;
     --no-tailscale) INSTALL_TAILSCALE=false ;;
-    --no-coolify) INSTALL_COOLIFY=false ;;
-    --no-smee) INSTALL_SMEE=false ;;
     --no-uv) INSTALL_UV=false ;;
     --ssh-keys) SSH_KEYS_SELECTION="$2"; shift ;;
     -h|--help) usage ;;
@@ -85,23 +79,23 @@ echo "=========================================="
 
 # Update system packages
 if should_run "Update system packages" "$INSTALL_UPDATE"; then
-  echo "[1/10] Updating system packages..."
+  echo "[1/8] Updating system packages..."
   sudo apt update && sudo apt upgrade -y
 else
-  echo "[1/10] Skipping system packages update"
+  echo "[1/8] Skipping system packages update"
 fi
 
 # Install essential tools
 if should_run "Install essential tools" "$INSTALL_TOOLS"; then
-  echo "[2/10] Installing essential tools..."
+  echo "[2/8] Installing essential tools..."
   sudo apt install -y curl git htop vim
 else
-  echo "[2/10] Skipping essential tools installation"
+  echo "[2/8] Skipping essential tools installation"
 fi
 
 # Configure Vim
 if should_run "Configure Vim" "$INSTALL_VIM"; then
-  echo "[3/10] Configuring Vim..."
+  echo "[3/8] Configuring Vim..."
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   SETUP_DIR="$(dirname "$SCRIPT_DIR")"
   if [ -f "$SETUP_DIR/.vimrc" ]; then
@@ -111,12 +105,12 @@ if should_run "Configure Vim" "$INSTALL_VIM"; then
     echo "  Warning: .vimrc not found in setup directory"
   fi
 else
-  echo "[3/10] Skipping Vim configuration"
+  echo "[3/8] Skipping Vim configuration"
 fi
 
 # Install GitHub CLI
 if should_run "Install GitHub CLI" "$INSTALL_GH"; then
-  echo "[4/10] Installing GitHub CLI..."
+  echo "[4/8] Installing GitHub CLI..."
   if ! command -v gh &> /dev/null; then
     # Add GitHub CLI official repository
     # Install wget if missing
@@ -150,12 +144,12 @@ if should_run "Install GitHub CLI" "$INSTALL_GH"; then
     echo "  GitHub CLI already installed"
   fi
 else
-  echo "[4/10] Skipping GitHub CLI installation"
+  echo "[4/8] Skipping GitHub CLI installation"
 fi
 
 # Configure Git using GitHub CLI
 if should_run "Configure Git" "$INSTALL_GIT"; then
-  echo "[5/10] Configuring Git..."
+  echo "[5/8] Configuring Git..."
 
   # Check GitHub auth status
   if gh auth status &>/dev/null; then
@@ -243,12 +237,12 @@ if should_run "Configure Git" "$INSTALL_GIT"; then
     echo "  Run 'gh auth login' and re-run this script later"
   fi
 else
-  echo "[5/10] Skipping Git configuration"
+  echo "[5/8] Skipping Git configuration"
 fi
 
 # Configure SSH
 if should_run "Configure SSH" "$INSTALL_SSH"; then
-  echo "[6/10] Configuring SSH..."
+  echo "[6/8] Configuring SSH..."
   ssh_key_path="$HOME/.ssh/id_ed25519"
   if [ -f "$ssh_key_path" ]; then
     echo "  SSH key already exists: $ssh_key_path"
@@ -343,89 +337,20 @@ if should_run "Configure SSH" "$INSTALL_SSH"; then
     echo "  Skipping GitHub SSH key upload (not authenticated)"
   fi
 else
-  echo "[6/10] Skipping SSH configuration"
+  echo "[6/8] Skipping SSH configuration"
 fi
 
 # Install Tailscale
 if should_run "Install Tailscale" "$INSTALL_TAILSCALE"; then
-  echo "[7/10] Installing Tailscale..."
+  echo "[7/8] Installing Tailscale..."
   curl -fsSL https://tailscale.com/install.sh | sh
 else
-  echo "[7/10] Skipping Tailscale installation"
-fi
-
-# Install Coolify
-if should_run "Install Coolify" "$INSTALL_COOLIFY"; then
-  echo "[8/10] Installing Coolify..."
-  curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
-else
-  echo "[8/10] Skipping Coolify installation"
-fi
-
-# Install smee.io client
-if should_run "Install Smee.io client" "$INSTALL_SMEE"; then
-  echo "[9/10] Setting up smee.io webhook proxy..."
-
-  # Check if Node.js/npm is available
-  if ! command -v npm &> /dev/null; then
-    echo "  Installing Node.js..."
-    curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-    sudo apt install -y nodejs
-  fi
-
-  # Install smee-client
-  echo "  Installing smee-client..."
-  sudo npm install --global smee-client
-
-  # Get the actual path to the smee binary
-  SMEE_BIN=$(which smee 2>/dev/null || echo "/usr/local/bin/smee")
-  if [ ! -x "$SMEE_BIN" ]; then
-    NPM_PREFIX=$(npm prefix -g 2>/dev/null || echo "/usr/local")
-    SMEE_BIN="$NPM_PREFIX/bin/smee"
-  fi
-  echo "  Smee binary: $SMEE_BIN"
-
-  # Generate new smee.io channel URL
-  echo "  Generating smee.io channel URL..."
-  SMEE_URL=$(curl -w "%{redirect_url}" -s -o /dev/null https://smee.io/new 2>/dev/null || echo "")
-  # Validate the URL format
-  if [ -z "$SMEE_URL" ] || ! echo "$SMEE_URL" | grep -qE '^https://smee\.io/[A-Za-z0-9]+$'; then
-    echo "  Warning: Failed to generate smee.io URL"
-    echo "  Please manually generate a URL at https://smee.io/new"
-    SMEE_URL="https://smee.io/YOUR_CHANNEL_URL"
-  fi
-  echo "  Smee URL: $SMEE_URL"
-
-  # Create systemd service file
-  # Note: Port 8000 is where Coolify runs - smee forwards webhooks there
-  # Note: Running as root per original specification; consider using a less privileged user
-  echo "  Creating systemd service..."
-  sudo tee /etc/systemd/system/smee.service > /dev/null << EOF
-[Unit]
-Description=Smee Client
-After=network.target
-
-[Service]
-Type=simple
-User=root
-Restart=always
-ExecStart=$SMEE_BIN --url $SMEE_URL --path /webhooks/source/github/events --port 8000
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-  # Enable and start the service
-  sudo systemctl daemon-reload
-  sudo systemctl enable smee
-  echo "  Smee service enabled (not started - update URL first if placeholder)"
-else
-  echo "[9/10] Skipping Smee.io setup"
+  echo "[7/8] Skipping Tailscale installation"
 fi
 
 # Install uv (Python package manager)
 if should_run "Install uv" "$INSTALL_UV"; then
-  echo "[10/10] Installing uv (Python package manager)..."
+  echo "[8/8] Installing uv (Python package manager)..."
   if command -v uv &> /dev/null; then
     echo "  uv already installed: $(uv --version)"
   else
@@ -434,7 +359,7 @@ if should_run "Install uv" "$INSTALL_UV"; then
     echo "  Note: Restart your shell or run 'source $HOME/.local/bin/env' to use uv"
   fi
 else
-  echo "[10/10] Skipping uv installation"
+  echo "[8/8] Skipping uv installation"
 fi
 
 echo ""
@@ -460,14 +385,6 @@ echo "Generating setup log file: $LOG_FILE"
   echo "Important Configuration"
   echo "=========================================="
   echo ""
-  echo "[Smee.io Webhook Proxy]"
-  echo "  URL: $SMEE_URL"
-  echo "  Service file: /etc/systemd/system/smee.service"
-  echo "  Target: localhost:8000/webhooks/source/github/events"
-  echo ""
-  echo "[Coolify]"
-  echo "  URL: http://localhost:8000"
-  echo ""
   echo "[Git Configuration]"
   echo "  user.name: $(git config --global user.name 2>/dev/null || echo 'not set')"
   echo "  user.email: $(git config --global user.email 2>/dev/null || echo 'not set')"
@@ -491,11 +408,6 @@ echo "Generating setup log file: $LOG_FILE"
   echo "=========================================="
   echo ""
   echo "1. Run 'sudo tailscale up' to join the Tailscale network"
-  echo "2. Access Coolify at http://localhost:8000"
-  echo "3. If smee.io URL is a placeholder, update /etc/systemd/system/smee.service"
-  echo "   with a valid URL from https://smee.io/new, then run:"
-  echo "     sudo systemctl daemon-reload && sudo systemctl restart smee"
-  echo "4. In Coolify, configure the GitHub webhook to use the smee.io URL above"
   echo ""
 } > "$LOG_FILE"
 
@@ -503,10 +415,6 @@ echo "  Log file created: $LOG_FILE"
 echo ""
 echo "Next steps:"
 echo "  1. Run 'sudo tailscale up' to join the Tailscale network"
-echo "  2. Access Coolify at http://localhost:8000"
-echo "  3. If smee.io URL is a placeholder, update /etc/systemd/system/smee.service"
-echo "     with a valid URL from https://smee.io/new, then run:"
-echo "       sudo systemctl daemon-reload && sudo systemctl restart smee"
 echo ""
 echo "Configuration saved to: $LOG_FILE"
 echo ""

@@ -1,19 +1,19 @@
 # Pi Dev Toolkit
 
-**Raspberry Pi 4 の初期セットアップ専用シェルスクリプト集**
+**複数の Raspberry Pi を IoT ノードとして立ち上げるための、最小限の初期セットアップスクリプト**
 
-Coolify・Tailscale を含む、開発・デプロイワークフローの土台となる Pi 本体の環境構築を行います。
+システム更新・基本ツール・Tailscale（メッシュVPN）・GitHub連携（gh/git/SSH）・uv など、
+どのノードにも共通して必要な最低限の環境構築だけを行います。
 
-新規プロジェクトのひな形（Docker Compose / Nixpacks / Coolifyデプロイ / Claude Code連携）は
-このリポジトリの範囲外。[vibe-dev-template-claude](https://github.com/ponderingm/vibe-dev-template-claude)
+個々のプロジェクトのひな形（Docker Compose / Coolifyデプロイ / Claude Code連携など）は
+このリポジトリの範囲外。必要な場合は [vibe-dev-template-claude](https://github.com/ponderingm/vibe-dev-template-claude)
 （別リポジトリ、private）を使ってください。
 
 ### 対象環境
 
 - **対象:** Raspberry Pi 4 (ARM64)
 - **OS:** Raspberry Pi OS Lite (64-bit)
-- **インフラ:** Coolify (PaaS), Tailscale (メッシュ VPN)
-- **ワークフロー:** ローカル PC (Docker Compose) → Git Push → Coolify 自動デプロイ
+- **ネットワーク:** Tailscale（メッシュVPNで複数ノードをプライベートに接続）
 
 ## クイックスタート
 
@@ -42,15 +42,13 @@ bash setup/scripts/setup.sh
 - Git の設定（GitHub から自動取得したユーザー名・メールアドレス）
 - **SSH の設定**（鍵の生成、GitHub へのアップロード、クライアント公開鍵のインポート）
 - Tailscale のインストール
-- Coolify のインストール
-- smee.io クライアントのインストールと Webhook プロキシの設定
 - **uv のインストール**（Python パッケージ管理ツール）
 
-### 2. 新規プロジェクトを作る
+### 2. 新規プロジェクトを作る（任意）
 
 Pi本体のセットアップが終わったら、個々のプロジェクトは
 [vibe-dev-template-claude](https://github.com/ponderingm/vibe-dev-template-claude) の
-**Use this template** ボタンから作成してください（Docker Compose / Nixpacks / Coolifyデプロイ /
+**Use this template** ボタンから作成できます（Docker Compose / Coolifyデプロイ（オプション）/
 Claude Code連携がひな形として入っています）。
 
 ## プロジェクト構成
@@ -74,12 +72,10 @@ pi-dev-toolkit/
 
 ## 開発ワークフロー
 
-1. `setup/scripts/setup.sh` で Pi 本体をセットアップ
-2. [vibe-dev-template-claude](https://github.com/ponderingm/vibe-dev-template-claude) から新規プロジェクトを作成
-3. Conventional Commits 形式でコミット
-4. GitHub にプッシュ
-5. Coolify が自動的に Raspberry Pi にデプロイ
-6. Continuous Release ワークフローが自動的にバージョンタグ・GitHub Releaseを作成
+1. `setup/scripts/setup.sh` で Pi 本体（IoTノード）をセットアップ
+2. 必要なら [vibe-dev-template-claude](https://github.com/ponderingm/vibe-dev-template-claude) から個々のプロジェクトを作成
+3. このリポジトリ自体への変更は Conventional Commits 形式でコミット
+4. `main` への push で Continuous Release ワークフローが自動的にバージョンタグ・GitHub Releaseを作成
 
 ## コミットメッセージのルール
 
@@ -95,7 +91,6 @@ pi-dev-toolkit/
 
 ## 技術スタック
 
-- **デプロイメント基盤**: Coolify
 - **Python パッケージ管理**: uv
 - **ネットワーク**: Tailscale
 - **ホスティング**: Raspberry Pi 4 (ARM64)
