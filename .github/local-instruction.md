@@ -55,11 +55,8 @@ GitHub への push をトリガーに Coolify が自動的にビルド・デプ�
 
 ## プロジェクト固有の設定
 
-### テンプレートファイルの同期
-
-`.github/copilot-instructions.md` を更新したら、必ず `templates/.github/copilot-instructions.md` も同じ内容に更新してください。
-
-これにより、新規プロジェクト作成時に最新のガイドラインが反映されます。
+このリポジトリは Raspberry Pi の初期セットアップ専用。新規プロジェクトのひな形は
+[vibe-dev-template-claude](https://github.com/ponderingm/vibe-dev-template-claude)（別リポジトリ）を使う。
 
 ### シェル出力に関するルール
 
