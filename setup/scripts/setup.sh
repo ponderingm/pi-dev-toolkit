@@ -458,6 +458,21 @@ if should_run "Install agy_bootstrapper" "$INSTALL_AGY_BOOTSTRAPPER"; then
       ln -sfn "$d" "$AGY_INSTALL_DIR/roles/$role_name"
       echo "  Linked role: $role_name"
     done
+
+    # Register 'agysync' shell function: wraps sessions with pull-before/push-after
+    # so personas/roles state (memories.md etc.) stays in sync across machines.
+    if [ -f "$AGY_PROFILES_DIR/sync-and-run.sh" ] && [ -f "$HOME/.bashrc" ] \
+      && ! grep -q "PI_DEV_TOOLKIT AGYSYNC START" "$HOME/.bashrc"; then
+      {
+        echo ""
+        echo "# === PI_DEV_TOOLKIT AGYSYNC START ==="
+        echo "agysync() {"
+        echo "  \"$AGY_PROFILES_DIR/sync-and-run.sh\" \"\$@\""
+        echo "}"
+        echo "# === PI_DEV_TOOLKIT AGYSYNC END ==="
+      } >> "$HOME/.bashrc"
+      echo "  Registered 'agysync' shell function in ~/.bashrc"
+    fi
   else
     echo "  Warning: GitHub CLI not authenticated; skipping private profiles ($AGY_PROFILES_REPO)"
   fi
@@ -523,14 +538,17 @@ echo "Generating setup log file: $LOG_FILE"
   echo "  Install dir: $AGY_INSTALL_DIR"
   echo "  Private profiles: $AGY_PROFILES_DIR"
   echo "  Engines: $AGY_ENGINES"
+  echo "  Cross-machine sync: run sessions via 'agysync <command...>' (see agy-profiles-private/README.md)"
   echo ""
   echo "=========================================="
   echo "Next Steps"
   echo "=========================================="
   echo ""
   echo "1. Run 'sudo tailscale up' to join the Tailscale network"
-  echo "2. Run 'source ~/.bashrc' to load agy_bootstrapper shortcut commands"
+  echo "2. Run 'source ~/.bashrc' to load agy_bootstrapper/agysync shortcut commands"
   echo "3. Run 'claude' / 'copilot' once each to complete their login"
+  echo "4. Launch persona sessions via 'agysync <command...>', not the raw alias,"
+  echo "   so memories.md etc. stay in sync across machines"
   echo ""
 } > "$LOG_FILE"
 
@@ -538,8 +556,10 @@ echo "  Log file created: $LOG_FILE"
 echo ""
 echo "Next steps:"
 echo "  1. Run 'sudo tailscale up' to join the Tailscale network"
-echo "  2. Run 'source ~/.bashrc' to load agy_bootstrapper shortcut commands"
+echo "  2. Run 'source ~/.bashrc' to load agy_bootstrapper/agysync shortcut commands"
 echo "  3. Run 'claude' / 'copilot' once each to complete their login"
+echo "  4. Launch persona sessions via 'agysync <command...>', not the raw alias,"
+echo "     so memories.md etc. stay in sync across machines"
 echo ""
 echo "Configuration saved to: $LOG_FILE"
 echo ""

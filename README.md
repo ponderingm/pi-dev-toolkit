@@ -51,7 +51,15 @@ bash setup/scripts/setup.sh
 - **GitHub Copilot CLI** のインストール
 - **agy_bootstrapper** のセットアップ（public な本体をclone し、非公開の
   [agy-profiles-private](https://github.com/ponderingm/agy-profiles-private) から
-  本命のペルソナ・ロールをシンボリックリンクで差し込む）
+  本命のペルソナ・ロールをシンボリックリンクで差し込む。あわせて `agysync` という
+  shell関数を `~/.bashrc` に登録する）
+
+セットアップ後、ペルソナセッションは `cldp` 等のエイリアスを直接叩くのではなく、
+必ず `agysync <コマンド...>`（例: `agysync cldp yukikaze_future programmer -c`）
+経由で起動すること。実行前後にプロファイルをpull/pushして、複数マシン間で
+`memories.md` 等の状態がズレないようにする。詳細は
+[agy-profiles-private の README](https://github.com/ponderingm/agy-profiles-private/blob/main/README.md)
+を参照。
 
 ### 2. 新規プロジェクトを作る（任意）
 
